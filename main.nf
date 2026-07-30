@@ -1,33 +1,33 @@
 #!/home/zeemeeuw/miniconda3/envs/joint/bin/nextflow
 
-// nextflow run main.nf --hlahd_linenum 1000 -resume
+// nextflow run main.nf -resume -bg  -with-report /data/xrz/HLA/output/EvaHLA_cellline_report.html -with-timeline /data/xrz/HLA/output/EvaHLA_cellline_timeline.html
 
 // params.hlahd = "/home/xrz/hlahd.1.7.1/hlahd.sh"
 // params.hlahd_refdir = "/home/xrz/hlahd.1.7.1"
-params.input_csv = '/data/xrz/HLA/nextflow/samplesheet.csv'
-params.hlahd_refdir = params.hlahd_refdir ?: ( params.hlahd ? file(params.hlahd).getParent().getParent().toString() : null )
-params.run_hlahd = true
+params.input_csv     = '/data/xrz/HLA/EvaHLA/samplesheet.csv'
+params.hlahd_refdir  = params.hlahd_refdir ?: (params.hlahd ? file(params.hlahd).getParent().getParent().toString() : null)
+params.run_hlahd     = true
 params.hlahd_linenum = 400000
-params.run_t1k = true
-params.t1k_preset = "hla-wgs"
-params.t1k_reffile = "/home/xrz/hlaidx/hlaidx_dna_seq.fa"
+params.run_t1k       = true
+params.t1k_preset    = "hla-wgs"
+params.t1k_reffile   = "/home/xrz/hlaidx/hlaidx_dna_seq.fa"
 
 
 
 process MERGE_FQ {
     tag "Merging fastq files of ${meta.id}..."
-    
+
     input:
-    tuple val(meta), path(r1s) , path(r2s)
-    
-    output:
-    tuple val(meta), path("*_merged_R1.fq.gz"), path("*_merged_R2.fq.gz"), emit: merged_fq
-    
+    tuple val(meta), path(r1s), path(r2s)
+
     script:
     """
     cat ${r1s.join(' ')} > ${meta.id}_merged_R1.fq.gz
     cat ${r2s.join(' ')} > ${meta.id}_merged_R2.fq.gz
     """
+
+    output:
+    tuple val(meta), path("*_merged_R1.fq.gz"), path("*_merged_R2.fq.gz"), emit: merged_fq
 }
 
 
@@ -37,10 +37,6 @@ process FASTP {
 
     input:
     tuple val(meta), path(r1), path(r2)
-
-    output:
-    tuple val(meta), path("${meta.id}_fastp_R1.fq.gz"), path("${meta.id}_fastp_R2.fq.gz"), emit: fastp_fq
-    tuple val(meta), path("${meta.id}_fastp.html"), emit: fastp_html
 
     script:
 
@@ -56,6 +52,10 @@ process FASTP {
         -h ${meta.id}_fastp.html \
         -j ${meta.id}_fastp.json
     """
+
+    output:
+    tuple val(meta), path("${meta.id}_fastp_R1.fq.gz"), path("${meta.id}_fastp_R2.fq.gz"), emit: fastp_fq
+    tuple val(meta), path("${meta.id}_fastp.html"), emit: fastp_html
 }
 
 
@@ -64,9 +64,6 @@ process HLAHD {
 
     input:
     tuple val(meta), path(r1), path(r2)
-
-    output:
-    tuple val(meta), path("${meta.id}_HLA_HD_final.result.txt"), emit: hlahd_result
 
     script:
 
@@ -92,19 +89,18 @@ process HLAHD {
         ${meta.id}_HLA_HD ./
     cp ${meta.id}_HLA_HD/result/${meta.id}_HLA_HD_final.result.txt ./
     """
+
+    output:
+    tuple val(meta), path("${meta.id}_HLA_HD_final.result.txt"), emit: hlahd_result
 }
 
 
 
 process T1K {
-    tag "Runing HLA-HD on ${r1} and ${r2}"
+    tag "Runing T1K on ${r1} and ${r2}"
 
     input:
     tuple val(meta), path(r1), path(r2)
-
-    output:
-    tuple val(meta), path("*.tsv"), emit: t1k_result
-    tuple val(meta), path("${meta.id}_t1k_allele.tsv"), emit: t1k_allele
 
     script:
 
@@ -120,6 +116,10 @@ process T1K {
         --skipPostAnalysis \
         --noExtraction
     """
+
+    output:
+    tuple val(meta), path("*.tsv"), emit: t1k_result
+    tuple val(meta), path("${meta.id}_t1k_allele.tsv"), emit: t1k_allele
 }
 
 
@@ -129,10 +129,7 @@ process PARSE_RESULT {
 
     input:
     tuple val(meta), path(hlahd), path(t1k_allele)
-    path(pyparse)
-
-    output:
-    tuple val(meta), path("${meta.id}_parsed.tsv"), emit: parsed_result
+    path pyparse
 
     script:
 
@@ -144,7 +141,8 @@ process PARSE_RESULT {
         --out ${meta.id}_parsed.tsv
     """
 
-
+    output:
+    tuple val(meta), path("${meta.id}_parsed.tsv"), emit: parsed_result
 }
 
 // python /data/xrz/HLA/nextflow/parse.py --sample AC12 --hlahd ./HLA_HD/AC12_HLA_HD_final.result.txt --t1k ./t1k/AC12_t1k_allele.tsv --out ./AC12_parsed.tsv
@@ -153,61 +151,60 @@ process PARSE_RESULT {
 workflow {
 
     main:
-    log.info """\
-      nftide-caphic
+    log.info(
+        """\
+      EvaHLA
       ===================================
+      Run HLA-HD             :  ${params.run_hlahd}
       HLA-HD                 :  ${params.hlahd}
       HLA-HD refDir          :  ${params.hlahd_refdir}
+      HLA-HD useline num     :  ${params.hlahd_linenum}
+      Run t1k                :  ${params.run_t1k}
+      t1k preset             :  ${params.t1k_preset}
+      t1k reffile            :  ${params.t1k_reffile}
       projectDir             :  ${projectDir}
-      workingDir             :  ${workflow.outputDir}
+      workingDir             :  ${workflow.outputDir}     
     """.stripIndent()
+    )
 
-    if( run_hlahd && !params.hlahd ) {
-        exit 1, "params.hlahd is not set. Please specify --hlahd explicitly."
+    if (params.run_hlahd && !params.hlahd) {
+        exit(1, "params.hlahd is not set. Please specify --hlahd explicitly.")
     }
 
-    if( run_hlahd && !params.hlahd_refdir ) {
-        exit 1, "params.hlahd_refdir is not set and could not be inferred from params.hlahd. Please specify --hlahd_refdir explicitly."
+    if (params.run_hlahd && !params.hlahd_refdir) {
+        exit(1, "params.hlahd_refdir is not set and could not be inferred from params.hlahd. Please specify --hlahd_refdir explicitly.")
     }
 
-    if( run_t1k && !params.t1k_reffile ) {
-        exit 1, "params.t1k_reffile is not set. Please specify --t1k_reffile explicitly."
+    if (params.run_t1k && !params.t1k_reffile) {
+        exit(1, "params.t1k_reffile is not set. Please specify --t1k_reffile explicitly.")
     }
 
     ch_read_pairs = channel.fromPath(params.input_csv)
-    .splitCsv(header:true)
-    .map { row -> 
-        [
-            row.sample,
-            row
-        ]
-    }
-    .groupTuple()
-    .map { _sample, rows -> 
-        rows.withIndex().collect { row, index ->
-            row + [rep: index + 1]
+        .splitCsv(header: true)
+        .map { row ->
+            [row.sample, row]
         }
-    }
-    .flatMap { item -> item }
-   .map { row -> 
+        .groupTuple()
+        .map { _sample, rows ->
+            rows
+                .withIndex()
+                .collect { row, index ->
+                    row + [rep: index + 1]
+                }
+        }
+        .flatMap { item -> item }
+        .map { row ->
 
-        [
-            [
+            [[
                 id: row.sample,
                 rep: row.rep,
-
-            ], 
-            [
-                file(row.fastq_1, checkIfExists: true), 
-                file(row.fastq_2, checkIfExists: true)
-            ]
-        ]
-    }
-    .map{meta, files -> [meta.subMap(['id']), files]}
-    .groupTuple()
-    .map { meta, filePairs ->
-        [ meta, filePairs.collect { pair -> pair[0] }, filePairs.collect { pair -> pair[1] }]
-    }
+            ], [file(row.fastq_1, checkIfExists: true), file(row.fastq_2, checkIfExists: true)]]
+        }
+        .map { meta, files -> [meta.subMap(['id']), files] }
+        .groupTuple()
+        .map { meta, filePairs ->
+            [meta, filePairs.collect { pair -> pair[0] }, filePairs.collect { pair -> pair[1] }]
+        }
 
     MERGE_FQ(ch_read_pairs)
     FASTP(MERGE_FQ.out.merged_fq)
@@ -215,31 +212,27 @@ workflow {
     ch_t1k_out = channel.empty()
     ch_t1k_toparse = channel.empty()
     ch_parsed_result = channel.empty()
-    if(params.run_hlahd){
+    if (params.run_hlahd) {
         ch_hlahd_out = HLAHD(FASTP.out.fastp_fq).hlahd_result
     }
-    if(params.run_t1k){
+    if (params.run_t1k) {
         T1K(FASTP.out.fastp_fq)
         ch_t1k_out = T1K.out.t1k_result
         ch_t1k_toparse = T1K.out.t1k_allele
-        
     }
-    
-    if(params.run_t1k && params.run_hlahd){
+
+    if (params.run_t1k && params.run_hlahd) {
         PARSE_RESULT(ch_hlahd_out.join(ch_t1k_toparse, by: 0), "${projectDir}/parse.py")
         ch_parsed_result = PARSE_RESULT.out.parsed_result
     }
-    
 
     publish:
     out_merged_fastqs = MERGE_FQ.out.merged_fq
-    out_fastp_fastqs = FASTP.out.fastp_fq
-    out_fastp_html = FASTP.out.fastp_html
-    out_hlahd = ch_hlahd_out
-    out_t1k = ch_t1k_out
-    out_parse = ch_parsed_result
-
-
+    out_fastp_fastqs  = FASTP.out.fastp_fq
+    out_fastp_html    = FASTP.out.fastp_html
+    out_hlahd         = ch_hlahd_out
+    out_t1k           = ch_t1k_out
+    out_parse         = ch_parsed_result
 }
 
 output {
@@ -261,5 +254,4 @@ output {
     out_parse {
         path { meta, _f1 -> "${meta.id}" }
     }
-
 }
