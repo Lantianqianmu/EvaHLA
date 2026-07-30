@@ -30,8 +30,8 @@ mamba activate EvaHLA
 ```
 cd EvaHLA
 ```
-(3) Install HLA-HD. Refer to their manuals to install and prepare HLA index files.
-(4) Prepare HLA index files for t1k. Refer to their github pages.
+(3) Install HLA-HD. Refer to their manuals to install and prepare HLA index files [HLA-HD](https://w3.genome.med.kyoto-u.ac.jp/HLA-HD/).  
+(4) Prepare HLA index files for t1k. Refer to their github pages at [T1K](https://github.com/mourisl/T1K).
 
 ## Overview ##
 HLA-HD and t1k are used to perform HLA genotyping on EvaHLA libraries. We use a hybrid comparison method to decide the final HLA-A, -B, -C, -DPA1, -DPB1, -DQA1, -DQB1, -DRB1 and HLA-DRB3/4/5.
