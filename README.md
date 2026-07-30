@@ -30,7 +30,7 @@ mamba activate EvaHLA
 ```
 cd EvaHLA
 ```
-(3) Install HLA-HD. Refer to their manuals to install and prepare HLA index files [HLA-HD](https://w3.genome.med.kyoto-u.ac.jp/HLA-HD/).  
+(3) Install HLA-HD. Refer to their manuals to install and prepare HLA index files at [HLA-HD](https://w3.genome.med.kyoto-u.ac.jp/HLA-HD/).  
 (4) Prepare HLA index files for t1k. Refer to their github pages at [T1K](https://github.com/mourisl/T1K).
 
 ## Overview ##
