@@ -73,7 +73,7 @@ Go to `-output-dir`. The pipeline will create folders named according to the `sa
 `fastqs`: Merged and adapter-trimmed fastqs.  
 `HLA_HD`: Genotyping results of HLA-HD.  
 `t1k`: Genotyping results of t1k.  
-if both HLA-HD and t1k are called, a merged putative result will be established under `-output-dir`.  
+if both HLA-HD and t1k are called, a merged putative result will be established under `-output-dir/sample/`.  
 
 
 
