@@ -53,6 +53,8 @@ nextflow run main.nf \
   --run_t1k true \
   --t1k_preset hla-wgs \
   --t1k_reffile hlaidx_dna_seq.fa \
+  -with-report nftide-caphic_report.html \
+  -with-timeline nftide-caphic_timeline.html \
   -bg -resume
 ```
 `-output-dir`: Path to the output directory.  
