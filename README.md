@@ -1,5 +1,5 @@
 # EvaHLA
-Nextflow pipeline for EvaHLA
+Consensus HLA allele calling pipeline for EvaHLA
 
 ## System requirements ##
 The pipeline requires >= 256 GB memory. It is recommended to have at least 8 cores. We typically run the pipeline on a server with dual Epyc 7542 and 512 GB memory.
