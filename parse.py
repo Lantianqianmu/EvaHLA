@@ -328,7 +328,7 @@ def qc_check(row: Dict[str, Optional[str]]) -> Tuple[str, str]:
                 "DRB4": "*04/*07/*09", "DRB3": "*03/*11/*12/*13/*14", "DRB5": "*15/*16",
             }.get(unexpected_types[0], "unknown")
             violations.append(
-                f"DRB1 apparently homozygous (*{g1} → {exp_s}) but unexpected DRB3/4/5: "
+                f"DRB1 apparently homozygous (*{g1} -> {exp_s}) but unexpected DRB3/4/5: "
                 f"[{','.join(unexpected_types)}] — possible dropout of DRB1 allele in group {group_hint}"
             )
         elif exp_s is not None and len(set(obs_alleles)) > 1:
@@ -339,7 +339,7 @@ def qc_check(row: Dict[str, Optional[str]]) -> Tuple[str, str]:
             # true homozygosity
             uniq = sorted(set(obs_alleles))
             violations.append(
-                f"DRB1 apparently homozygous (*{g1} → {exp_s}) but {len(uniq)} distinct "
+                f"DRB1 apparently homozygous (*{g1} -> {exp_s}) but {len(uniq)} distinct "
                 f"DRB3/4/5 alleles observed: [{','.join(uniq)}] — possible dropout of DRB1 allele"
             )
 
